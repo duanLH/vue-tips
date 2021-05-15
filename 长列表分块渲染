@@ -1,0 +1,76 @@
+<div v-for="(item,idx) in list" :key="idx">
+ </div>
+ 
+ <script>
+ window.requestAnimFrame = (function() {
+  return (
+    window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    function(callback) {
+      window.setTimeout(callback, 6000 / 60)
+    }
+  )
+})()
+export default{
+  name:'',
+  data(){
+     return{
+        firstInit: true, //是否初次加载，初次加载则使用分块加载
+        currentList: [], //分块加载所需
+        once :Object.freeze(10), //分块加载所需，每块加载的条数
+        currentTotal: 0, //分块加载所需
+        countOfRender: 0 //分块加载所需
+     }
+  },
+  methods:{
+     async initData() {
+      const queryObj = {
+      }
+      try {
+        this.initLoading = true
+        const { list, total } = await this.$api.replyQueryPostsReplyPage(
+          queryObj
+        )
+        if (this.firstInit) {
+          //初次加载，则启用分块
+          this.currentList = Object.freeze(list)
+          this.currentTotal = Object.freeze(list.length) 
+          this.loop()
+        } else {
+          //非初次加载，则直接赋值，并把分块信息清除
+          this.list = list
+          this.currentList = []
+        }
+
+        this.total = total
+      } finally {
+        this.firstInit = false
+        this.renderComponent = true
+        this.initLoading = false
+      }
+    },
+    loop() {
+      // 用requestAnimationFrame提高渲染效率和动画流畅度
+      window.requestAnimFrame(() => {
+        // 每次只渲染once条数据
+        
+        const temp = []
+        for (let i = 0; i < this.once; i++) {
+          // 当DOM渲染完就退出
+          if (this.countOfRender >= this.currentTotal){
+            //如果不够once，则渲染后退出
+            this.list = this.list.concat(temp)
+            return
+          } 
+          temp.push(this.currentList[this.countOfRender])
+          this.countOfRender += 1
+        }
+        this.list = this.list.concat(temp)
+        this.loop()
+      })
+    },
+  }
+}
+
+ </script>
