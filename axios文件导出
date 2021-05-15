@@ -1,0 +1,29 @@
+exportList() {
+      http({
+        url: "url",
+        method: "post",
+        data: data,
+        responseType: "blob"
+      })
+        .then(res => {
+          console.log(res.type);
+            let blob = new Blob([res], {
+              type:
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"
+            }); // 为blob设置文件类型，这里以.xls为例
+
+            const fileName = `${this.dataForm.meetSubject}-签到名单.xls`;
+            const elink = document.createElement("a");
+            elink.download = fileName;
+            elink.style.display = "none";
+            elink.href = URL.createObjectURL(blob);
+            document.body.appendChild(elink);
+            elink.click();
+            URL.revokeObjectURL(elink.href); // 释放URL 对象
+            document.body.removeChild(elink);
+
+        })
+        .catch(error => {
+          this.$message.error("" + error);
+        });
+    },
